@@ -1,0 +1,11 @@
+torch>=2.4
+transformers>=4.45
+accelerate>=0.34
+sentence-transformers>=3.0
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.8
+python-dotenv>=1.0
+numpy>=1.26
+peft>=0.13
+datasets>=3.0

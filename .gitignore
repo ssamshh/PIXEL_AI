@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+data/pixel.db
+data/knowledge/*
+!data/knowledge/.gitkeep
+models/*
+!models/.gitkeep
+.pytest_cache/
+.vscode/
+.idea/
