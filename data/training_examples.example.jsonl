@@ -1,2 +1,1 @@
-{"instruction":"What is PIXEL?","output":"PIXEL is a modular Deep Learning AI assistant with semantic memory and RAG."}
-{"instruction":"به فارسی جواب بده: هوش مصنوعی چیست؟","output":"هوش مصنوعی مجموعه‌ای از روش‌ها برای ساخت سامانه‌هایی است که می‌توانند وظایفی مانند درک متن، تصویر یا تصمیم‌گیری را انجام دهند."}
+{"instruction":"What is PIXEL?","output":"PIXEL is a modular local AI assistant with semantic memory, RAG, conversation sessions, and a local language model."}

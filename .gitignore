@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+venv/
 .env
 data/pixel.db
 data/knowledge/*
@@ -8,5 +9,6 @@ data/knowledge/*
 models/*
 !models/.gitkeep
 .pytest_cache/
+.coverage
 .vscode/
 .idea/
