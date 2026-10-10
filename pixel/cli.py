@@ -1,74 +1,32 @@
-from .brain import PixelBrain
-
-
-HELP = """Commands:
-  /learn TEXT                  Store a memory
-  /memory                      List recent memories
-  /search TEXT                 Semantic memory search
-  /forget ID                   Delete a memory
-  /clear                       Clear current conversation
-  /session NAME                Switch conversation session
-  /model                       Show model/device status
-  /help                        Show this help
-  /quit                        Exit PIXEL
-"""
-
+from .core.brain import PixelBrain
 
 def main():
-    brain = PixelBrain()
-    session = "default"
-    print("=" * 58)
-    print("PIXEL AI 2.0")
-    print("Type /help for commands.")
-    print("=" * 58)
+    brain=PixelBrain()
+    session="default"
+    print("PIXEL AI 3.0 — /help for commands, /quit to exit")
     while True:
-        try:
-            text = input(f"\nYou [{session}]: ").strip()
-        except (KeyboardInterrupt, EOFError):
-            print("\nBye!")
-            break
-        if not text:
+        try: line=input(f"PIXEL[{session}]> ").strip()
+        except (EOFError,KeyboardInterrupt): print(); break
+        if not line: continue
+        if line in {"/quit","/exit"}: break
+        if line=="/help":
+            print("/learn TEXT | /memory | /search TEXT | /forget ID | /session NAME | /clear | /tools | /model | /quit"); continue
+        if line.startswith("/learn "):
+            print(brain.learn(line[7:])); continue
+        if line=="/memory": 
+            [print(f"#{m['id']} [{m['category']}] {m['text']}") for m in brain.memories()]; continue
+        if line.startswith("/search "):
+            [print(m) for m in brain.search_memory(line[8:])]; continue
+        if line.startswith("/forget "):
+            try: print(brain.forget(int(line[8:])))
+            except ValueError: print("ID must be a number.")
             continue
-        if text == "/quit":
-            break
-        if text == "/help":
-            print(HELP)
-            continue
-        if text == "/memory":
-            for item in brain.memories():
-                print(f"[{item['id']}] ({item['category']}) {item['text']}")
-            continue
-        if text.startswith("/search "):
-            for item in brain.search(text[8:].strip()):
-                print(f"[{item['id']}] score={item['score']:.2f} {item['text']}")
-            continue
-        if text.startswith("/learn "):
-            try:
-                print(brain.learn(text[7:].strip()))
-            except Exception as exc:
-                print("Error:", exc)
-            continue
-        if text.startswith("/forget "):
-            try:
-                print(brain.forget(int(text[8:].strip())))
-            except ValueError:
-                print("Error: memory ID must be a number.")
-            continue
-        if text == "/clear":
-            print(brain.clear_chat(session))
-            continue
-        if text.startswith("/session "):
-            session = text[9:].strip() or "default"
-            print(f"Session: {session}")
-            continue
-        if text == "/model":
-            print(brain.health())
-            continue
-        try:
-            print("PIXEL:", brain.ask(text, session)["answer"])
-        except Exception as exc:
-            print("Error:", exc)
+        if line.startswith("/session "):
+            session=line[9:].strip() or "default"; print("Session:",session); continue
+        if line=="/clear": print(brain.clear_chat(session)); continue
+        if line=="/tools": print(brain.tools.list_tools()); continue
+        if line=="/model": print(brain.model.info()); continue
+        try: print(brain.ask(line,session)["answer"])
+        except Exception as exc: print("Error:",exc)
 
-
-if __name__ == "__main__":
-    main()
+if __name__=="__main__": main()

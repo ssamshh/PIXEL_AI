@@ -1,12 +1,15 @@
 from pixel.database import Database
+from pixel.memory import MemoryManager
 
-
-def test_memory_and_messages(tmp_path):
-    db = Database(str(tmp_path / "test.db"))
-    memory_id = db.add_memory("hello", "test", "general", 3, [1.0, 0.0])
-    assert db.get_memory(memory_id)["text"] == "hello"
-    assert db.update_memory(memory_id, category="test")
-    assert db.get_memory(memory_id)["category"] == "test"
-    db.add_message("s1", "user", "hi")
-    assert db.recent_messages("s1") == [("user", "hi")]
-    assert db.delete_memory(memory_id)
+def test_database_memory_and_sessions(tmp_path):
+    db=Database(str(tmp_path/"pixel.db"))
+    memory=MemoryManager(db)
+    saved=memory.add("I like Python",category="preference",importance=4)
+    assert saved["status"]=="stored"
+    assert memory.list()[0]["text"]=="I like Python"
+    assert memory.update(saved["id"],text="I enjoy Python",importance=5)
+    assert memory.list()[0]["text"]=="I enjoy Python"
+    db.add_message("test-session","user","Hello")
+    assert db.recent_messages("test-session")==[("user","Hello")]
+    assert db.list_sessions()
+    assert memory.forget(saved["id"])

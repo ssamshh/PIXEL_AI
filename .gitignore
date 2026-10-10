@@ -3,12 +3,10 @@ __pycache__/
 .venv/
 venv/
 .env
-data/pixel.db
-data/knowledge/*
+.pytest_cache/
+data/*.db
+data/uploads/*
 !data/knowledge/.gitkeep
 models/*
 !models/.gitkeep
-.pytest_cache/
-.coverage
-.vscode/
-.idea/
+.DS_Store
