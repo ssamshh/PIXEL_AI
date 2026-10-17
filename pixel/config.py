@@ -10,8 +10,12 @@ def env_bool(name: str, default: bool = False) -> bool:
     return default if value is None else value.strip().lower() in {"1", "true", "yes", "on"}
 
 class Settings:
-    version = "3.0.0"
+    version = "3.5.0"
+    model_provider = os.getenv("PIXEL_MODEL_PROVIDER", "local").strip().lower()
     model_name = os.getenv("PIXEL_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
+    api_base_url = os.getenv("PIXEL_API_BASE_URL", "http://127.0.0.1:11434/v1").strip().rstrip("/")
+    api_key = os.getenv("PIXEL_API_KEY", "").strip()
+    request_timeout = max(5, min(300, int(os.getenv("PIXEL_REQUEST_TIMEOUT", "90"))))
     db_path = str((ROOT / os.getenv("PIXEL_DB", "data/pixel.db")).resolve()) if not Path(os.getenv("PIXEL_DB", "data/pixel.db")).is_absolute() else os.getenv("PIXEL_DB")
     max_new_tokens = max(16, min(4096, int(os.getenv("PIXEL_MAX_NEW_TOKENS", "256"))))
     max_history_messages = max(2, min(100, int(os.getenv("PIXEL_MAX_HISTORY_MESSAGES", "16"))))

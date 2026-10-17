@@ -10,7 +10,7 @@ from .documents import extract_text
 from .vision import describe_image
 from .plugins import PluginManager
 
-app=FastAPI(title="PIXEL AI",version="3.0.0",description="Local-first modular assistant")
+app=FastAPI(title="PIXEL AI",version="3.5.0",description="Local-first modular assistant")
 brain=PixelBrain()
 plugin_manager=PluginManager()
 
@@ -36,14 +36,15 @@ class SearchRequest(BaseModel):
     max_results:int=Field(default=5,ge=1,le=10)
 
 @app.get("/")
-def root(): return {"name":"PIXEL","version":"3.0.0","status":"online"}
+def root(): return {"name":"PIXEL","version":"3.5.0","status":"online"}
 @app.get("/health")
 def health(): return brain.health()
 @app.get("/api/settings")
 def get_settings():
-    return {"version":"3.0.0","model":settings.model_name,"web_search_enabled":settings.web_search_enabled,
+    return {"version":"3.5.0","model":settings.model_name,"model_provider":settings.model_provider,
+            "web_search_enabled":settings.web_search_enabled,
             "vision_configured":bool(settings.vision_api_url and settings.vision_model),
-            "tool_count":len(brain.tools.list_tools())}
+            "tool_count":len(brain.tools.list_tools()), "api_model_configured":bool(settings.api_base_url and settings.model_name)}
 @app.post("/chat")
 def chat(request:ChatRequest):
     try: return brain.ask(request.message,request.session_id,request.temperature,request.use_tools)
@@ -82,6 +83,17 @@ def memory_delete(memory_id:int):
     return result
 @app.get("/sessions")
 def sessions(): return {"items":brain.sessions()}
+@app.get("/chat/history")
+def chat_history(session_id:str=Query(default="default",min_length=1,max_length=100), limit:int=Query(default=500,ge=1,le=2000)):
+    return {"session_id":session_id,"items":brain.db.session_history(session_id,limit)}
+class SessionRename(BaseModel):
+    title:str=Field(min_length=1,max_length=100)
+@app.patch("/sessions/{session_id}")
+def session_rename(session_id:str,req:SessionRename):
+    try: ok=brain.db.rename_session(session_id,req.title)
+    except ValueError as exc: raise HTTPException(400,str(exc))
+    if not ok: raise HTTPException(404,"Session not found")
+    return {"status":"renamed","session_id":session_id,"title":" ".join(req.title.split())[:100]}
 @app.delete("/sessions/{session_id}")
 def session_delete(session_id:str):
     if len(session_id)>100: raise HTTPException(400,"Invalid session ID")
@@ -108,6 +120,20 @@ async def read_file(file:UploadFile=File(...), remember:bool=Form(False)):
     except ValueError as exc: raise HTTPException(400,str(exc))
     if remember and text: brain.learn(text[:100000],source=file.filename or "upload",category="document",importance=3)
     return {"filename":file.filename,"characters":len(text),"text":text[:200000],"truncated":len(text)>200000}
+@app.post("/files/ask")
+async def ask_about_file(file:UploadFile=File(...),prompt:str=Form("Summarize this document."),session_id:str=Form("default")):
+    if not prompt.strip(): raise HTTPException(400,"Prompt cannot be empty.")
+    if not session_id.strip() or len(session_id)>100: raise HTTPException(400,"Invalid session ID.")
+    data=await file.read()
+    try: document_text=extract_text(file.filename or "upload.txt",data)
+    except ValueError as exc: raise HTTPException(400,str(exc))
+    if not document_text: raise HTTPException(400,"No readable text was found in this file.")
+    try:
+        result=brain.ask(prompt,session_id=session_id,extra_context=f"Filename: {file.filename or 'upload'}\n\n{document_text[:120000]}")
+        result["document"]={"filename":file.filename,"characters":len(document_text),"context_truncated":len(document_text)>120000}
+        return result
+    except Exception as exc: raise HTTPException(500,f"Document question failed: {exc}")
+
 @app.post("/vision")
 async def vision(file:UploadFile=File(...),prompt:str=Form("Describe this image.")):
     name=file.filename or "image.png"

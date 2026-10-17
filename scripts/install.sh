@@ -8,6 +8,6 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 [[ -f .env ]] || cp .env.example .env
 echo
-echo "PIXEL 3.0 installed."
+echo "PIXEL 4.0 installed."
 echo "Start with: source .venv/bin/activate && uvicorn pixel.api:app --host 127.0.0.1 --port 8000"
 echo "Open: http://127.0.0.1:8000/app"

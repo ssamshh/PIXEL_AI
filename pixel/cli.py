@@ -3,7 +3,7 @@ from .core.brain import PixelBrain
 def main():
     brain=PixelBrain()
     session="default"
-    print("PIXEL AI 3.0 — /help for commands, /quit to exit")
+    print("PIXEL AI 3.5 — /help for commands, /quit to exit")
     while True:
         try: line=input(f"PIXEL[{session}]> ").strip()
         except (EOFError,KeyboardInterrupt): print(); break

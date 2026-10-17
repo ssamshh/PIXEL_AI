@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pixel-ai"
-version = "3.0.0"
-description = "A modular local-first AI assistant"
+version = "3.5.0"
+description = "PIXEL AI 3.5: a modular local-first AI assistant"
 requires-python = ">=3.10"
 dependencies = [
   "fastapi>=0.110",

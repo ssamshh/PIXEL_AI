@@ -90,8 +90,14 @@ class Database:
                 scored.append((score + item["importance"]*0.005, item))
         scored.sort(key=lambda x:x[0], reverse=True)
         results=[]
-        for score,item in scored[:limit]:
-            item = dict(item); item["score"] = round(score,3); results.append(item)
+        chosen = scored[:max(1, min(100, int(limit)))]
+        if chosen:
+            ids = [item["id"] for _, item in chosen]
+            placeholders = ",".join("?" for _ in ids)
+            with self.connect() as db:
+                db.execute(f"UPDATE memories SET use_count=use_count+1,last_used_at=CURRENT_TIMESTAMP WHERE id IN ({placeholders})", ids)
+        for score,item in chosen:
+            item = dict(item); item["score"] = round(score,3); item["use_count"] = int(item.get("use_count",0))+1; results.append(item)
         return results
 
     def add_message(self, session_id, role, content):
@@ -106,6 +112,20 @@ class Database:
         with self.connect() as db:
             rows=db.execute("SELECT role,content FROM (SELECT id,role,content FROM messages WHERE session_id=? ORDER BY id DESC LIMIT ?) ORDER BY id",(session_id,limit)).fetchall()
         return [(r["role"],r["content"]) for r in rows]
+
+    def session_history(self, session_id="default", limit=500):
+        with self.connect() as db:
+            rows = db.execute("SELECT id,session_id,role,content,created_at FROM messages WHERE session_id=? ORDER BY id LIMIT ?",
+                              (session_id, max(1, min(2000, int(limit))))).fetchall()
+        return [dict(row) for row in rows]
+
+    def rename_session(self, session_id, title):
+        title = " ".join(str(title).split())[:100]
+        if not title:
+            raise ValueError("Session title cannot be empty.")
+        with self.connect() as db:
+            cur = db.execute("UPDATE sessions SET title=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", (title, session_id))
+        return cur.rowcount > 0
 
     def list_sessions(self):
         with self.connect() as db:
